@@ -1,0 +1,10 @@
+pefile
+capstone
+numpy
+pandas
+scikit-learn
+joblib
+tqdm
+requests
+fastapi
+uvicorn[standard]

@@ -1,0 +1,75 @@
+name: Deploy HydraDragon SDK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history for git diff
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install 7-Zip
+        run: choco install 7zip
+
+      - name: Update signature database
+        run: python bulk_import.py
+
+      - name: Get changed files
+        id: changed_files
+        run: |
+          $files = git diff --name-only HEAD~1 HEAD
+          echo "files=$files" >> $env:GITHUB_OUTPUT
+
+      - name: Create 7-Zip archive
+        run: |
+          $fileList = "${{ steps.changed_files.outputs.files }}".Split(" ")
+          7z a -t7z -m0=lzma2 -mx=9 -v2g release.7z $fileList
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      - name: Upload signature.db to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./signatures.db
+          asset_name: signatures.db
+          asset_content_type: application/octet-stream
+
+      - name: Upload 7-Zip archives to release
+        run: |
+          Get-ChildItem -Path ./release.7z.* | ForEach-Object {
+            $assetPath = $_.FullName
+            $assetName = $_.Name
+            echo "Uploading $assetName"
+            gh release upload ${{ github.run_number }} $assetPath --clobber
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
