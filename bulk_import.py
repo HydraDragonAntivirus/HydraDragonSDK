@@ -52,10 +52,6 @@ def main():
         for root, dirs, files in os.walk(folder_path):
             for file in files:
                 file_path = os.path.join(root, file)
-                
-                # Skip non-executable files to avoid errors
-                if not file.lower().endswith(('.exe', '.dll', '.sys', '.pyd')):
-                    continue
 
                 try:
                     # 1. Check MD5 first (fastest)
