@@ -89,3 +89,22 @@ This application is configured for deployment on **Hugging Face Spaces**, a free
 3.  **Label Files:** Manually label some files as "Benign" or "Malicious". You need a good number of both to train an effective model.
 4.  **Train Model:** Once you have enough labeled data, click the **Train Model** button. This will create a `packed_detector.joblib` file within the Space's storage.
 5.  **Scan Files:** For any remaining "Unlabeled" files, click the **Scan with ML** button to automatically classify them using your newly trained model.
+
+## Folder Scanner CLI
+
+You can use the `joblib_folder_scanner.py` script to scan a specified folder for PE files and classify them using the trained `packed_detector.joblib` model.
+
+**Prerequisites:**
+Ensure all dependencies are installed:
+```bash
+pip install -r requirements.txt
+```
+
+**Usage:**
+To scan a folder, run the following command, replacing `D:\yenindirme\2025-11-28` with the path to the folder you want to scan:
+
+```bash
+python scanners/joblib_folder_scanner.py --folder "D:\yenindirme\2025-11-28" --model packed_detector.joblib
+```
+
+The script will output the prediction (Malicious/Packed or Benign/Unpacked) and the associated probability for each PE file found in the specified folder.
